@@ -1,0 +1,18 @@
+{
+    "name": "threadi/wp-easy-setup",
+    "description": "Provides a simple react-driven plugin-setup for WordPress-backend.",
+    "type": "library",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Thomas Zwirner",
+            "email": "info@thomaszwirner.de"
+        }
+    ],
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "wpEasySetup\\": "lib/"
+        }
+    }
+}

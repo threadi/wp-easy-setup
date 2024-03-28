@@ -1,0 +1,14 @@
+{
+	"name": "@wp-easy-setup/wp-easy-setup",
+	"version": "1.0.0",
+	"description": "Provides a simple react-driven plugin-setup for WordPress-backend.",
+	"author": "Thomas Zwirner",
+	"license": "GPL-2.0-or-later",
+	"scripts": {
+		"start": "wp-scripts start src/setup.js --output-path=build/",
+		"build": "wp-scripts build src/setup.js --output-path=build/"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^27.5.0"
+	}
+}
