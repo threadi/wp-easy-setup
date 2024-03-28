@@ -69,4 +69,9 @@
 			box-shadow: none;
 		}
 	}
+
+	.components-checkbox-control .components-base-control__field > label {
+		display: inline-block;
+		margin-bottom: 0;
+	}
 }

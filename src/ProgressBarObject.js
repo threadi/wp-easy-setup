@@ -10,6 +10,8 @@ import {showError} from "./setup";
  */
 function getProcessInfo( object ) {
   setTimeout(() => {
+    object.props.object.setState( { 'button_disabled': true });
+
     fetch( wp_easy_setup.process_info_url, {
       method: 'POST',
       headers: {
@@ -20,8 +22,10 @@ function getProcessInfo( object ) {
     } )
     .then( response => response.json() )
     .then( function (result) {
-      // set progress.
-      document.getElementById( object.progressbar_id ).value = ( (result.step / result.max) * 100 );
+      if( result.step > 0 && result.max > 0 ) {
+        // set progress.
+        document.getElementById( object.progressbar_id ).value = ((result.step / result.max) * 100);
+      }
 
       // set label.
       document.getElementById( object.label_id ).innerText = result.step_label;
@@ -31,7 +35,7 @@ function getProcessInfo( object ) {
         getProcessInfo( object );
       }
       else {
-        // enable setup button.
+        // enable finish button.
         object.props.object.setState( { 'finish_button_disabled': false });
       }
     })

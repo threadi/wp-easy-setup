@@ -8,9 +8,12 @@
 
 // get individual styles.
 import './setup.scss';
+
+// get controls.
 import RadioControlObject from './RadioControlObject';
 import TextControlObject from './TextControlObject';
 import ProgressBarObject from './ProgressBarObject';
+import CheckboxControlObject from './CheckboxControlObject';
 
 // import dependencies.
 import {
@@ -93,6 +96,12 @@ class WpEasySetup extends Component {
        */
       case 'TextControl':
         return <TextControlObject field_name={ field_name } field={ field } object={ this } />;
+
+      /**
+       * Show Checkbox component for setting.
+       */
+      case 'CheckboxControl':
+        return <CheckboxControlObject field_name={ field_name } field={ field } object={ this } />;
 
       /**
        * Show RadioControl component for setting.
@@ -196,7 +205,7 @@ export const onSaveSetup = ( object ) => {
 }
 
 /**
- * Mark setup as completed and forward user to given path from response.
+ * Mark setup as completed and forward user to given path from response, if set.
  */
 export const onSetupCompleted = () => {
   fetch( wp_easy_setup.completed_url, {
@@ -264,11 +273,18 @@ export function setButtonDisabledState( object ) {
   let fields_count = 0;
   let fields_filled_count = 0;
   {Object.keys(object.props.fields[object.state.step]).map( field_name => {
+    console.log(object.props.fields[object.state.step][field_name]);
     fields_count++;
     if( object.state[field_name] && object.state.results[field_name] && object.state.results[field_name].result.length === 0 ) {
       fields_filled_count++;
     }
     else if( object.props.fields[object.state.step][field_name].type === 'Text' ) {
+      fields_filled_count++;
+    }
+    else if( object.props.fields[object.state.step][field_name].type === 'ProgressBar' && ! object.state.finish_button_disabled ) {
+      fields_filled_count++;
+    }
+    else if( object.props.fields[object.state.step][field_name].type === 'CheckboxControl' ) {
       fields_filled_count++;
     }
   })}

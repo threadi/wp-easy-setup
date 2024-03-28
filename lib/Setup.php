@@ -243,7 +243,7 @@ class Setup {
 		// get setup-fields.
 		$fields = $this->config['steps'];
 
-		// run check if all 3 vars are filled.
+		// run check if step and field_name are set.
 		if ( ! empty( $step ) && ! empty( $field_name ) ) {
 			// set field for response.
 			$validation_result['field_name'] = $field_name;
@@ -253,6 +253,7 @@ class Setup {
 				$validation_callback = $fields[ $step ][ $field_name ]['validation_callback'];
 				if ( ! empty( $validation_callback ) ) {
 					if ( is_callable( $validation_callback ) ) {
+						// call the validation callback and get its results.
 						$validation_result['result'] = call_user_func( $validation_callback, $value );
 					}
 				}
@@ -277,13 +278,13 @@ class Setup {
 		do_action( 'wp_easy_setup_process_init' );
 
 		// set marker that process is running.
-		update_option( 'wp_easy_setup_pi_running', 1 );
+		update_option( 'wp_easy_setup_running', 1 );
 
-		// set max step count (should be overridden by process-action).
-		update_option( 'wp_easy_setup_pi_max_steps', 0 );
+		// set max step count (could be overridden by process-action).
+		update_option( 'wp_easy_setup_max_steps', 0 );
 
 		// set actual steps to 0.
-		update_option( 'wp_easy_setup_pi_step', 0 );
+		update_option( 'wp_easy_setup_step', 0 );
 
 		/**
 		 * Run the process with custom tasks.
@@ -293,7 +294,7 @@ class Setup {
 		do_action( 'wp_easy_setup_process' );
 
 		// set process as not running.
-		delete_option( 'wp_easy_setup_pi_running' );
+		update_option( 'wp_easy_setup_running', 0 );
 
 		// return empty json.
 		wp_send_json( array() );
@@ -306,10 +307,10 @@ class Setup {
 	 */
 	public function get_process_info(): void {
 		$return = array(
-			'running'    => absint( get_option( 'wp_easy_setup_pi_running', 0 ) ),
-			'max'        => absint( get_option( 'wp_easy_setup_pi_max_steps', 0 ) ),
-			'step'       => absint( get_option( 'wp_easy_setup_pi_step', 0 ) ),
-			'step_label' => get_option( 'wp_easy_setup_pi_step_label', '' ),
+			'running'    => absint( get_option( 'wp_easy_setup_running' ) ),
+			'max'        => absint( get_option( 'wp_easy_setup_max_steps' ) ),
+			'step'       => absint( get_option( 'wp_easy_setup_step' ) ),
+			'step_label' => get_option( 'wp_easy_setup_step_label' ),
 		);
 
 		// Return JSON with result.
@@ -363,6 +364,9 @@ class Setup {
 		 * @since 3.0.0 Available since 3.0.0.
 		 */
 		do_action( 'wp_easy_setup_set_completed' );
+
+		// return empty json.
+		wp_send_json( array() );
 	}
 
 	/**
@@ -381,10 +385,10 @@ class Setup {
 	 */
 	private function get_options(): array {
 		return array(
-			'wp_easy_setup_pi_max_steps' => 0,
-			'wp_easy_setup_pi_step' => 0,
-			'wp_easy_setup_pi_step_label' => '',
-			'wp_easy_setup_pi_running' => 0,
+			'wp_easy_setup_max_steps' => 0,
+			'wp_easy_setup_step' => 0,
+			'wp_easy_setup_step_label' => '',
+			'wp_easy_setup_running' => 0,
 			'wp_easy_setup_completed' => array(),
 		);
 	}
