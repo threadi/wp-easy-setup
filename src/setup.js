@@ -14,6 +14,7 @@ import RadioControlObject from './RadioControlObject';
 import TextControlObject from './TextControlObject';
 import ProgressBarObject from './ProgressBarObject';
 import CheckboxControlObject from './CheckboxControlObject';
+import getActualDate from './helper/getActualDate';
 
 // import dependencies.
 import {
@@ -45,9 +46,11 @@ class WpEasySetup extends Component {
     /**
      * Add our fields to the list with empty init value.
      */
-    Object.keys(this.props.fields[this.state.step]).map( field_name => {
-      this.state[field_name] = '';
-    })
+    Object.keys(this.props.fields).map( step => {
+      Object.keys(this.props.fields[step]).map( field_name => {
+        this.state[field_name] = '';
+      })
+    });
   }
 
   /**
@@ -66,13 +69,15 @@ class WpEasySetup extends Component {
           };
 
           // check if response contains one of our fields, add its value to state and mark it as filled via empty result-value.
-          Object.keys(this.props.fields[this.state.step]).map( field_name => {
-            if( response[field_name] ) {
-              state[field_name] = response[field_name];
-              state.results[field_name] = {
-                'result': []
+          Object.keys(this.props.fields).map( step => {
+            Object.keys( this.props.fields[step] ).map( field_name => {
+              if (response[field_name] !== undefined) {
+                state[field_name] = response[field_name];
+                state.results[field_name] = {
+                  'result': []
+                }
               }
-            }
+            } );
           });
 
           // set resulting state.
@@ -164,7 +169,7 @@ class WpEasySetup extends Component {
               {this.state.step === this.props.config.step_count && <Button
                 isPrimary
                 disabled={this.state.finish_button_disabled}
-                onClick={() => onSetupCompleted()}
+                onClick={() => onSetupCompleted( this ) }
               >
                 { <span dangerouslySetInnerHTML={{__html: this.props.config.finish_button_label}}/> }
               </Button>
@@ -181,7 +186,7 @@ class WpEasySetup extends Component {
  * Load setup.
  */
 document.addEventListener( 'DOMContentLoaded', () => {
-  let html_obj = document.getElementById('wp-plugin-setup');
+  let html_obj = document.getElementById('wp-easy-setup');
   if( html_obj ) {
     ReactDOM.createRoot(html_obj).render(
       <WpEasySetup fields={JSON.parse(html_obj.dataset.fields)} config={JSON.parse(html_obj.dataset.config)} />
@@ -207,14 +212,17 @@ export const onSaveSetup = ( object ) => {
 /**
  * Mark setup as completed and forward user to given path from response, if set.
  */
-export const onSetupCompleted = () => {
+export const onSetupCompleted = ( object ) => {
   fetch( wp_easy_setup.completed_url, {
     method: 'POST',
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Content-Type': 'application/json',
-      'X-WP-Nonce': wp_easy_setup.rest_nonce
-    }
+      'X-WP-Nonce': wp_easy_setup.rest_nonce,
+    },
+    body: JSON.stringify({
+      'config_name': object.props.config.name,
+    })
   } )
     .then( response => response.json() )
     .then( function( result ) {
@@ -246,22 +254,21 @@ export const onChangeField = ( object, field_name, field, newValue,  ) => {
         'X-WP-Nonce': wp_easy_setup.rest_nonce
       },
       body: JSON.stringify({
+        'config_name': object.props.config.name,
         'step': object.state.step,
         'field_name': field_name,
         'value': newValue
       })
     } )
       .then( response => response.json() )
-      .then( function( result ) {
-          object.state.results[field_name] = result;
-          object.setState( {[field_name]: newValue} );
+      .then( function( data ) {
+          object.state.results[field_name] = data;
+          object.setState( { 'date': getActualDate() } )
         }
       )
       .catch( error => showError( error ) );
   }
-  else {
-    object.setState( {[field_name]: newValue} )
-  }
+  object.setState( {[field_name]: newValue} )
 }
 
 /**
@@ -273,7 +280,6 @@ export function setButtonDisabledState( object ) {
   let fields_count = 0;
   let fields_filled_count = 0;
   {Object.keys(object.props.fields[object.state.step]).map( field_name => {
-    console.log(object.props.fields[object.state.step][field_name]);
     fields_count++;
     if( object.state[field_name] && object.state.results[field_name] && object.state.results[field_name].result.length === 0 ) {
       fields_filled_count++;

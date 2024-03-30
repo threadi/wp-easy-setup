@@ -18,7 +18,10 @@ function getProcessInfo( object ) {
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json',
         'X-WP-Nonce': wp_easy_setup.rest_nonce
-      }
+      },
+      body: JSON.stringify({
+        'config_name': object.props.object.props.config.name,
+      })
     } )
     .then( response => response.json() )
     .then( function (result) {
@@ -28,7 +31,7 @@ function getProcessInfo( object ) {
       }
 
       // set label.
-      document.getElementById( object.label_id ).innerText = result.step_label;
+      document.getElementById( object.label_id ).innerHTML = result.step_label;
 
       // run info-check again if progress is running.
       if( 1 === result.running ) {
@@ -65,7 +68,10 @@ export default class ProgressBarObject extends Component {
             'Access-Control-Allow-Origin': '*',
             'Content-Type': 'application/json',
             'X-WP-Nonce': wp_easy_setup.rest_nonce
-          }
+          },
+          body: JSON.stringify({
+            'config_name': this.props.object.props.config.name,
+          })
         } )
         .catch( error => showError( error ) )
       // get info about process every x ms.

@@ -58,12 +58,20 @@ class Setup {
 	}
 
 	/**
-	 * Return the setup-configuration.
+	 * Return the setup-configuration for given name.
+	 *
+	 * @param string $name The configuration name to use.
 	 *
 	 * @return array
 	 */
-	private function get_config(): array {
-		return $this->config;
+	private function get_config( string $name ): array {
+		// bail if requested configuration is not available.
+		if( empty($this->config[$name]) ) {
+			return array();
+		}
+
+		// return the configuration.
+		return $this->config[$name];
 	}
 
 	/**
@@ -87,20 +95,33 @@ class Setup {
 	 * @return void
 	 */
 	public function set_config( array $config ): void {
+		// only add if required values are set.
+		if( empty( $config['name'] ) || empty( $config['steps'] ) ) {
+			return;
+		}
+
 		// add step-count.
 		$config['step_count'] = count( $config['steps'] );
 
 		// set config in object.
-		$this->config = $config;
+		$this->config[$config['name']] = $config;
 	}
 
 	/**
 	 * Return the setup-steps from configuration.
 	 *
+	 * @param string $name Configuration name to use.
+	 *
 	 * @return array
 	 */
-	private function get_setup_steps(): array {
-		return $this->config['steps'];
+	private function get_setup_steps( string $name ): array {
+		// bail if requested configuration is unknown.
+		if( empty( $this->config[$name] ) ) {
+			return array();
+		}
+
+		// return the configuration.
+		return $this->config[$name]['steps'];
 	}
 
 	/**
@@ -109,11 +130,24 @@ class Setup {
 	 * @return void
 	 */
 	public function add_scripts(): void {
+		// bail if no configuration is set.
+		if( empty( $this->config ) ) {
+			return;
+		}
+
+		// get first configuration for url and paths.
+		$first_configuration = reset( $this->config );
+
+		// bail if no configuration could be loaded.
+		if( empty( $first_configuration ) ) {
+			return;
+		}
+
 		// get absolute path for this package.
 		$path = __DIR__.'/../';
 
 		// get the URL were we could call our scripts.
-		$url = $this->config['url'].'/'.str_replace($this->config['path'], '', $this->get_vendor_path()).'/threadi/wp-easy-setup/';
+		$url = $first_configuration['url'].'/'.str_replace($first_configuration['path'], '', $this->get_vendor_path()).'/threadi/wp-easy-setup/';
 
 		// embed the setup-JS-script.
 		$script_asset_path = $path . 'build/setup.asset.php';
@@ -127,12 +161,11 @@ class Setup {
 		);
 
 		// embed the dialog-components CSS-script.
-		$admin_css      = $url . 'build/setup.css';
 		wp_enqueue_style(
 			'wp-easy-setup',
-			$admin_css,
+			$url . 'build/setup.css',
 			array( 'wp-components' ),
-			'1.0.0' // TODO
+			filemtime( $path . 'build/setup.css' )
 		);
 
 		// localize the script.
@@ -145,9 +178,9 @@ class Setup {
 				'process_url'      => rest_url( 'wp-easy-setup/v1/process' ),
 				'process_info_url' => rest_url( 'wp-easy-setup/v1/get-process-info' ),
 				'completed_url'    => rest_url( 'wp-easy-setup/v1/completed' ),
-				'title_error'      => $this->get_config()['title_error'],
-				'txt_error_1'      => $this->get_config()['txt_error_1'],
-				'txt_error_2'      => $this->get_config()['txt_error_2'],
+				'title_error'      => $first_configuration['title_error'],
+				'txt_error_1'      => $first_configuration['txt_error_1'],
+				'txt_error_2'      => $first_configuration['txt_error_2'],
 			)
 		);
 	}
@@ -231,6 +264,9 @@ class Setup {
 			'result'     => 'error',
 		);
 
+		// get config-name.
+		$config_name = $request->get_param( 'config_name' );
+
 		// get setup step.
 		$step = $request->get_param( 'step' );
 
@@ -240,14 +276,15 @@ class Setup {
 		// get value.
 		$value = $request->get_param( 'value' );
 
-		// get setup-fields.
-		$fields = $this->config['steps'];
-
 		// run check if step and field_name are set.
 		if ( ! empty( $step ) && ! empty( $field_name ) ) {
+			// get setup-fields of requested configuration.
+			$fields = $this->get_setup_steps( $config_name );
+
 			// set field for response.
 			$validation_result['field_name'] = $field_name;
-			// check if field exist in step.
+
+			// check if field exist in the requested step of the requested setup-configuration.
 			if ( ! empty( $fields[ $step ][ $field_name ] ) ) {
 				// get validation-callback for this field.
 				$validation_callback = $fields[ $step ][ $field_name ]['validation_callback'];
@@ -267,15 +304,24 @@ class Setup {
 	/**
 	 * Run the setup-progress via REST API.
 	 *
+	 * @param WP_REST_Request $request The REST API request object.
+	 *
 	 * @return void
 	 */
-	public function process_init(): void {
+	public function process_init( WP_REST_Request $request ): void {
+		$config_name = $request->get_param( 'config_name' );
+
 		/**
 		 * Run actions before setup-process is running.
 		 *
 		 * @since 3.0.0 Available since 3.0.0.
+		 *
+		 * @param string $config_name The name of the requested setup-configuration.
 		 */
-		do_action( 'wp_easy_setup_process_init' );
+		do_action( 'wp_easy_setup_process_init', $config_name );
+
+		// reset step label.
+		update_option('wp_easy_setup_step_label', '' );
 
 		// set marker that process is running.
 		update_option( 'wp_easy_setup_running', 1 );
@@ -290,8 +336,10 @@ class Setup {
 		 * Run the process with custom tasks.
 		 *
 		 * @since 3.0.0 Available since 3.0.0.
+		 *
+		 * @param string $config_name The name of the requested setup-configuration.
 		 */
-		do_action( 'wp_easy_setup_process' );
+		do_action( 'wp_easy_setup_process', $config_name );
 
 		// set process as not running.
 		update_option( 'wp_easy_setup_running', 0 );
@@ -313,16 +361,18 @@ class Setup {
 			'step_label' => get_option( 'wp_easy_setup_step_label' ),
 		);
 
-		// Return JSON with result.
+		// return JSON with result.
 		wp_send_json( $return );
 	}
 
 	/**
 	 * Return whether the setup has been completed.
 	 *
+	 * @param string $config_name The name of the requested setup-configuration.
+	 *
 	 * @return bool
 	 */
-	public function is_completed(): bool {
+	public function is_completed( string $config_name ): bool {
 		// return true if main block functions are not available.
 		if ( ! has_action( 'enqueue_block_assets' ) ) {
 			return true;
@@ -331,29 +381,34 @@ class Setup {
 		// get actual completed setups.
 		$actual_completed = get_option( 'wp_easy_setup_completed', array() );
 
-		// return depending on own setting.
-		$is_completed = in_array( $this->get_config()['name'], $actual_completed, true );
+		// check if requested setup is completed.
+		$is_completed = in_array( $config_name, $actual_completed, true );
 
 		/**
 		 * Filter whether the setup is completed (true) or not (false).
 		 *
 		 * @since 1.0.0 Available since 1.0.0.
 		 * @param bool $is_completed The return value.
+		 * @param string $config_name The configuration name.
 		 */
-		return apply_filters( 'wp_easy_setup_completed', $is_completed );
+		return apply_filters( 'wp_easy_setup_completed', $is_completed, $config_name );
 	}
 
 	/**
 	 * Set setup as completed.
 	 *
+	 * @param WP_REST_Request $request The REST API request object.
+	 *
 	 * @return void
 	 */
-	public function set_completed(): void {
+	public function set_completed( WP_REST_Request $request ): void {
+		$config_name = $request->get_param( 'config_name' );
+
 		// get actual list of completed setups.
 		$actual_completed = get_option( 'wp_easy_setup_completed', array() );
 
 		// add this setup to the list.
-		$actual_completed[] = $this->get_config()['name'];
+		$actual_completed[] = $this->get_config( $config_name )['name'];
 
 		// add the actual setup to the list of completed setups.
 		update_option( 'wp_easy_setup_completed', $actual_completed );
@@ -362,8 +417,9 @@ class Setup {
 		 * Run tasks if setup has been marked as completed.
 		 *
 		 * @since 3.0.0 Available since 3.0.0.
+		 * @param string $config_name The name of the requested setup-configuration.
 		 */
-		do_action( 'wp_easy_setup_set_completed' );
+		do_action( 'wp_easy_setup_set_completed', $config_name );
 
 		// return empty json.
 		wp_send_json( array() );
@@ -372,10 +428,12 @@ class Setup {
 	/**
 	 * Show setup dialog.
 	 *
+	 * @param string $name The name of the requested setup-configuration.
+	 *
 	 * @return string
 	 */
-	public function display(): string {
-		return '<div id="wp-plugin-setup" data-config="' . esc_attr( wp_json_encode( $this->get_config() ) ) . '" data-fields="' . esc_attr( wp_json_encode( $this->get_setup_steps() ) ) . '"></div>';
+	public function display( string $name ): string {
+		return '<div id="wp-easy-setup" data-config="' . esc_attr( wp_json_encode( $this->get_config( $name ) ) ) . '" data-fields="' . esc_attr( wp_json_encode( $this->get_setup_steps( $name ) ) ) . '"></div>';
 	}
 
 	/**

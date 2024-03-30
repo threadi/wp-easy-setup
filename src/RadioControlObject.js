@@ -1,4 +1,4 @@
-import {onChangeField, setButtonDisabledState} from "./setup";
+import {onChangeField} from "./setup";
 
 /**
  * Import dependencies.
