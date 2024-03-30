@@ -53,7 +53,7 @@ export default class CheckboxControlObject extends Component {
         label={this.props.field.label}
         className={classes}
         help={helper_text}
-        onChange={(value) => onChangeField( this.props.object, this.props.field_name, this.props.field, value )}
+        onChange={(value) => onChangeField( this.props.object, this.props.field_name, this.props.field, value ? 1 : 0 )}
         checked={ this.props.object.state[this.props.field_name] }
       />
   }

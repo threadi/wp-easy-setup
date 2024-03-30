@@ -1,4 +1,4 @@
-#wp-plugin-setup {
+#wp-easy-setup {
 	margin: 3em auto 0;
 	width: 40%;
 	min-width: 420px;
@@ -52,7 +52,7 @@
 		}
 	}
 
-	.wp-setup-error {
+	.wp-easy-setup-error {
 		span.hint {
 			color: red;
 			display: block;
@@ -63,7 +63,7 @@
 		}
 	}
 
-	.wp-setup-ok {
+	.wp-easy-setup-ok {
 		input {
 			border: 1px solid green;
 			box-shadow: none;

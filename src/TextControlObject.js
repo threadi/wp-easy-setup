@@ -1,4 +1,4 @@
-import {onChangeField, setButtonDisabledState} from "./setup";
+import {onChangeField} from "./setup";
 
 /**
  * Import dependencies.
@@ -35,14 +35,14 @@ export default class TextControlObject extends Component {
     let classes = "";
     if( this.props.object.state.results[this.props.field_name] ) {
       if ( this.props.object.state.results[this.props.field_name].result.error ) {
-        classes = 'wp-setup-error';
+        classes = 'wp-easy-setup-error';
         if ( this.props.object.state.results[this.props.field_name].text ) {
           helper_text = <><span className="hint">{this.props.object.state.results[this.props.field_name].result.text}</span><span
             dangerouslySetInnerHTML={{__html: this.props.field.help}}/></>;
         }
       }
       else if( this.props.object.state[this.props.field_name].length > 0 ) {
-        classes = 'wp-setup-ok';
+        classes = 'wp-easy-setup-ok';
         this.props.object.state.results[this.props.field_name].filled = true;
       }
     }
