@@ -199,12 +199,8 @@ class Setup {
      * @return string
      */
     private function get_vendor_path(): string {
-        $composer_package_data = InstalledVersions::getRootPackage();
-        if( empty( $composer_package_data ) ) {
-            return 'vendor';
-        }
-        $vendorPath = str_replace('/composer/../../', '', $composer_package_data['install_path'] );
-        return basename( $vendorPath );
+        $path = str_replace('/threadi/wp-easy-setup/lib', '', __DIR__ );
+        return basename( $path );
     }
 
     /**
