@@ -41,7 +41,7 @@ export default class TextControlObject extends Component {
             dangerouslySetInnerHTML={{__html: this.props.field.help}}/></>;
         }
       }
-      else if( this.props.object.state[this.props.field_name].length > 0 ) {
+      else if( this.props.object.state[this.props.field_name] && this.props.object.state[this.props.field_name].length > 0 ) {
         classes = 'wp-easy-setup-ok';
         this.props.object.state.results[this.props.field_name].filled = true;
       }

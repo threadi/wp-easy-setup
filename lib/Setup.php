@@ -7,6 +7,9 @@
 
 namespace wpEasySetup;
 
+// prevent direct access.
+defined( 'ABSPATH' ) || exit;
+
 use Composer\InstalledVersions;
 use WP_REST_Request;
 use WP_REST_Server;
