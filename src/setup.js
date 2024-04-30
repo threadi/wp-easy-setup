@@ -298,25 +298,10 @@ export function setButtonDisabledState( object ) {
 }
 
 /**
- * Show error as dialog.
+ * Show error.
  *
  * @param error
  */
 export function showError( error ) {
-  let dialog_config = {
-    detail: {
-      title: wp_easy_setup.title_error,
-      texts: [
-        '<p><strong>' + wp_easy_setup.txt_error_1 + '</strong><br><pre>' + error + '</pre></p><p>' + wp_easy_setup.txt_error_2 + '</p>'
-      ],
-      buttons: [
-        {
-          'action': 'closeDialog();',
-          'variant': 'primary',
-          'text': 'OK'
-        }
-      ]
-    }
-  }
-  personio_integration_create_dialog( dialog_config )
+  alert('The following error occurred: ' + error );
 }
