@@ -36,7 +36,7 @@ export default class TextControlObject extends Component {
     if( this.props.object.state.results[this.props.field_name] ) {
       if ( this.props.object.state.results[this.props.field_name].result.error ) {
         classes = 'wp-easy-setup-error';
-        if ( this.props.object.state.results[this.props.field_name].text ) {
+        if ( this.props.object.state.results[this.props.field_name].result.text ) {
           helper_text = <><span className="hint">{this.props.object.state.results[this.props.field_name].result.text}</span><span
             dangerouslySetInnerHTML={{__html: this.props.field.help}}/></>;
         }
