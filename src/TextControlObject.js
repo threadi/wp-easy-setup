@@ -38,7 +38,7 @@ export default class TextControlObject extends Component {
         classes = 'wp-easy-setup-error';
         if ( this.props.object.state.results[this.props.field_name].result.text ) {
           helper_text = <><span className="hint">{this.props.object.state.results[this.props.field_name].result.text}</span><span
-            dangerouslySetInnerHTML={{__html: this.props.field.help}}/></>;
+              dangerouslySetInnerHTML={{__html: this.props.field.help}}/></>;
         }
       }
       else if( this.props.object.state[this.props.field_name] && this.props.object.state[this.props.field_name].length > 0 ) {
@@ -57,6 +57,6 @@ export default class TextControlObject extends Component {
         onChange={(value) => onChangeField( this.props.object, this.props.field_name, this.props.field, value )}
         placeholder={this.props.field.placeholder}
         value={this.props.object.state[this.props.field_name]}
-      />
+    />
   }
 }

@@ -119,9 +119,6 @@ class Setup {
             return;
         }
 
-        // add step-count.
-        $config['step_count'] = count( $config['steps'] );
-
         // set config in object.
         $this->config[$config['name']] = $config;
     }
@@ -140,7 +137,7 @@ class Setup {
         }
 
         // return the configuration.
-        return $this->config[$name]['steps'];
+        return apply_filters( 'wp_easy_setup_steps', $this->config[$name]['steps'] );
     }
 
     /**
@@ -185,6 +182,8 @@ class Setup {
             'wp_easy_setup',
             array(
                 'rest_nonce'       => wp_create_nonce( 'wp_rest' ),
+                // TODO ergänzt
+                'get_fields'   => rest_url( 'wp-easy-setup/v1/fields' ),
                 'validation_url'   => rest_url( 'wp-easy-setup/v1/validate-field' ),
                 'process_url'      => rest_url( 'wp-easy-setup/v1/process' ),
                 'process_info_url' => rest_url( 'wp-easy-setup/v1/get-process-info' ),
@@ -212,6 +211,18 @@ class Setup {
      * @return void
      */
     public function add_rest_api(): void {
+        // TODO ergänzt
+        register_rest_route(
+            'wp-easy-setup/v1',
+            '/fields/(?P<config_name>[a-zA-Z0-9-]+)',
+            array(
+                'methods'             => WP_REST_Server::READABLE,
+                'callback'            => array( $this, 'get_fields' ),
+                'permission_callback' => function () {
+                    return true; //current_user_can( 'manage_options' );
+                },
+            )
+        );
         register_rest_route(
             'wp-easy-setup/v1',
             '/validate-field/',
@@ -543,5 +554,25 @@ class Setup {
      */
     public function set_texts( array $texts ): void {
         $this->texts = $texts;
+    }
+
+    /**
+     * Get actual fields via request.
+     *
+     * @param WP_REST_Request $request
+     *
+     * @return array
+     */
+    public function get_fields( WP_REST_Request $request ): array {
+        // get config-name.
+        $config_name = $request->get_param( 'config_name' );
+
+        // bail if no config is given.
+        if( empty( $config_name ) ) {
+            return array();
+        }
+
+        // return the configuration.
+        return $this->get_setup_steps( $config_name );
     }
 }
