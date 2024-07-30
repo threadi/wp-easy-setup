@@ -41,13 +41,14 @@ class WpEasySetup extends Component {
       button_disabled: true, // marker for continue-button-state.
       finish_button_disabled: true, // marker for finish-button-state.
       is_api_loaded: false, // marker if API has been loaded.
+      fields: this.props.fields // the steps with its fields.
     };
 
     /**
      * Add our fields to the list with empty init value.
      */
-    Object.keys(this.props.fields).map( step => {
-      Object.keys(this.props.fields[step]).map( field_name => {
+    Object.keys(this.state.fields).map( step => {
+      Object.keys(this.state.fields[step]).map( field_name => {
         this.state[field_name] = '';
       })
     });
@@ -69,8 +70,8 @@ class WpEasySetup extends Component {
           };
 
           // check if response contains one of our fields, add its value to state and mark it as filled via empty result-value.
-          Object.keys(this.props.fields).map( step => {
-            Object.keys( this.props.fields[step] ).map( field_name => {
+          Object.keys(this.state.fields).map( step => {
+            Object.keys( this.state.fields[step] ).map( field_name => {
               if (response[field_name] !== undefined) {
                 state[field_name] = response[field_name];
                 state.results[field_name] = {
@@ -96,33 +97,33 @@ class WpEasySetup extends Component {
    */
   renderControlSetting( field_name, field ) {
     switch(field.type) {
-      /**
-       * Show TextControl component for setting.
-       */
+        /**
+         * Show TextControl component for setting.
+         */
       case 'TextControl':
         return <TextControlObject field_name={ field_name } field={ field } object={ this } />;
 
-      /**
-       * Show Checkbox component for setting.
-       */
+        /**
+         * Show Checkbox component for setting.
+         */
       case 'CheckboxControl':
         return <CheckboxControlObject field_name={ field_name } field={ field } object={ this } />;
 
-      /**
-       * Show RadioControl component for setting.
-       */
+        /**
+         * Show RadioControl component for setting.
+         */
       case 'RadioControl':
         return <RadioControlObject field_name={ field_name } field={ field } object={ this } />;
 
-      /**
-       * Show Progressbar component during running some server-side tasks.
-       */
+        /**
+         * Show Progressbar component during running some server-side tasks.
+         */
       case 'ProgressBar':
         return <ProgressBarObject field_name={ field_name } field={ field } object={ this } />
 
-      /**
-       * Return empty string for all other types.
-       */
+        /**
+         * Return empty string for all other types.
+         */
       default:
         return <div dangerouslySetInnerHTML={{__html: field.text}} />
     }
@@ -137,47 +138,47 @@ class WpEasySetup extends Component {
     setButtonDisabledState( this );
 
     return (
-      <Fragment>
-        <div className="wp-easy-setup__header">
-          <div className="wp-easy-setup__container">
-            <div className="wp-easy-setup__title">
-              <h1>{ this.props.config.title }</h1>
+        <Fragment>
+          <div className="wp-easy-setup__header">
+            <div className="wp-easy-setup__container">
+              <div className="wp-easy-setup__title">
+                <h1>{ this.props.config.title }</h1>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="wp-easy-setup__main">
-          <Panel>
-            <PanelBody>
-              {Object.keys(this.props.fields[this.state.step]).map( field_name => (
-                <div key={ field_name }>{this.renderControlSetting( field_name, this.props.fields[this.state.step][field_name] )}</div>
-              ) )}
-              {this.state.step > 1 && this.state.step !== this.props.config.step_count && <Button
-                isSecondary
-                onClick={() => this.setState( { 'step': this.state.step - 1 } )}
-              >
-                { <span dangerouslySetInnerHTML={{__html: this.props.config.back_button_label}}/> }
-              </Button>
-              }
-              {this.state.step < this.props.config.step_count && <Button
-                isPrimary
-                disabled={this.state.button_disabled}
-                onClick={() => onSaveSetup( this )}
-              >
-                { <span dangerouslySetInnerHTML={{__html: this.props.config.continue_button_label}}/> }
-              </Button>
-              }
-              {this.state.step === this.props.config.step_count && <Button
-                isPrimary
-                disabled={this.state.finish_button_disabled}
-                onClick={() => onSetupCompleted( this ) }
-              >
-                { <span dangerouslySetInnerHTML={{__html: this.props.config.finish_button_label}}/> }
-              </Button>
-              }
-            </PanelBody>
-          </Panel>
-        </div>
-      </Fragment>
+          <div className="wp-easy-setup__main">
+            <Panel>
+              <PanelBody>
+                {Object.keys(this.state.fields[this.state.step]).map( field_name => (
+                    <div key={ field_name }>{this.renderControlSetting( field_name, this.state.fields[this.state.step][field_name] )}</div>
+                ) )}
+                {this.state.step > 1 && this.state.step !== Object.keys(this.state.fields).length && <Button
+                    isSecondary
+                    onClick={() => this.setState( { 'step': this.state.step - 1 } )}
+                >
+                  { <span dangerouslySetInnerHTML={{__html: this.props.config.back_button_label}}/> }
+                </Button>
+                }
+                {this.state.step < Object.keys(this.state.fields).length && <Button
+                    isPrimary
+                    disabled={this.state.button_disabled}
+                    onClick={() => onSaveSetup( this )}
+                >
+                  { <span dangerouslySetInnerHTML={{__html: this.props.config.continue_button_label}}/> }
+                </Button>
+                }
+                {this.state.step === Object.keys(this.state.fields).length && <Button
+                    isPrimary
+                    disabled={this.state.finish_button_disabled}
+                    onClick={() => onSetupCompleted( this ) }
+                >
+                  { <span dangerouslySetInnerHTML={{__html: this.props.config.finish_button_label}}/> }
+                </Button>
+                }
+              </PanelBody>
+            </Panel>
+          </div>
+        </Fragment>
     )
   }
 }
@@ -189,7 +190,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
   let html_obj = document.getElementById('wp-easy-setup');
   if( html_obj ) {
     ReactDOM.createRoot(html_obj).render(
-      <WpEasySetup fields={JSON.parse(html_obj.dataset.fields)} config={JSON.parse(html_obj.dataset.config)} />
+        <WpEasySetup fields={JSON.parse(html_obj.dataset.fields)} config={JSON.parse(html_obj.dataset.config)} />
     );
   }
 });
@@ -205,8 +206,29 @@ export const onSaveSetup = ( object ) => {
   // save it via REST API for settings.
   new api.models.Settings( state ).save();
 
-  // set next step for setup.
-  object.setState( { 'step': object.state.step + 1 } );
+  // get actual setup config.
+  if( object.props.config.update_fields ) {
+    fetch(wp_easy_setup.get_fields + '/' + object.props.config.name, {
+      method: 'GET',
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+        'X-WP-Nonce': wp_easy_setup.rest_nonce
+      }
+    })
+        .then(response => response.json())
+        .then(function (data) {
+              object.setState({'fields': data, 'date': getActualDate()});
+              // set next step for setup.
+              object.setState({'step': object.state.step + 1});
+            }
+        )
+        .catch(error => showError(error));
+  }
+  else {
+    // set next step for setup.
+    object.setState({'step': object.state.step + 1});
+  }
 }
 
 /**
@@ -224,14 +246,14 @@ export const onSetupCompleted = ( object ) => {
       'config_name': object.props.config.name,
     })
   } )
-    .then( response => response.json() )
-    .then( function( result ) {
-        if( result.forward ) {
-          location.href = result.forward;
-        }
-      }
-    )
-    .catch( error => showError( error ) );
+      .then( response => response.json() )
+      .then( function( result ) {
+            if( result.forward ) {
+              location.href = result.forward;
+            }
+          }
+      )
+      .catch( error => showError( error ) );
 }
 
 /**
@@ -260,13 +282,13 @@ export const onChangeField = ( object, field_name, field, newValue,  ) => {
         'value': newValue
       })
     } )
-      .then( response => response.json() )
-      .then( function( data ) {
-          object.state.results[field_name] = data;
-          object.setState( { 'date': getActualDate() } )
-        }
-      )
-      .catch( error => showError( error ) );
+        .then( response => response.json() )
+        .then( function( data ) {
+              object.state.results[field_name] = data;
+              object.setState( { 'date': getActualDate() } )
+            }
+        )
+        .catch( error => showError( error ) );
   }
   object.setState( {[field_name]: newValue} )
 }
@@ -279,18 +301,21 @@ export const onChangeField = ( object, field_name, field, newValue,  ) => {
 export function setButtonDisabledState( object ) {
   let fields_count = 0;
   let fields_filled_count = 0;
-  {Object.keys(object.props.fields[object.state.step]).map( field_name => {
+  {Object.keys(object.state.fields[object.state.step]).map( field_name => {
     fields_count++;
     if( object.state[field_name] && object.state.results[field_name] && object.state.results[field_name].result.length === 0 ) {
       fields_filled_count++;
     }
-    else if( object.props.fields[object.state.step][field_name].type === 'Text' ) {
+    else if( object.state.fields[object.state.step][field_name].type === 'Text' ) {
       fields_filled_count++;
     }
-    else if( object.props.fields[object.state.step][field_name].type === 'ProgressBar' && ! object.state.finish_button_disabled ) {
+    else if( object.state.fields[object.state.step][field_name].type === 'ProgressBar' && ! object.state.finish_button_disabled ) {
       fields_filled_count++;
     }
-    else if( object.props.fields[object.state.step][field_name].type === 'CheckboxControl' ) {
+    else if( object.state.fields[object.state.step][field_name].type === 'TextControl' && ! object.state.fields[object.state.step][field_name].required ) {
+      fields_filled_count++;
+    }
+    else if( object.state.fields[object.state.step][field_name].type === 'CheckboxControl' ) {
       fields_filled_count++;
     }
   })}

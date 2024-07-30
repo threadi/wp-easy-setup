@@ -38,7 +38,7 @@ export default class CheckboxControlObject extends Component {
         classes = 'wp-setup-error';
         if (this.props.object.state.results[this.props.field_name].result.text) {
           helper_text = <><span className="hint">{this.props.object.state.results[this.props.field_name].result.text}</span><span
-            dangerouslySetInnerHTML={{__html: this.props.field.help}}/></>;
+              dangerouslySetInnerHTML={{__html: this.props.field.help}}/></>;
         }
       }
       else if( this.props.object.state[this.props.field_name] && this.props.object.state[this.props.field_name].length > 0 ) {
@@ -55,6 +55,6 @@ export default class CheckboxControlObject extends Component {
         help={helper_text}
         onChange={(value) => onChangeField( this.props.object, this.props.field_name, this.props.field, value ? 1 : 0 )}
         checked={ this.props.object.state[this.props.field_name] }
-      />
+    />
   }
 }
