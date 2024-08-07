@@ -10,7 +10,6 @@ namespace wpEasySetup;
 // prevent direct access.
 defined( 'ABSPATH' ) || exit;
 
-use Composer\InstalledVersions;
 use WP_REST_Request;
 use WP_REST_Server;
 
@@ -52,6 +51,13 @@ class Setup {
      * @var array
      */
     private array $texts = array();
+
+    /**
+     * The configured vendor path.
+     *
+     * @var string
+     */
+    private string $vendor_path = '';
 
     /**
      * Constructor for Init-Handler.
@@ -182,7 +188,6 @@ class Setup {
             'wp_easy_setup',
             array(
                 'rest_nonce'       => wp_create_nonce( 'wp_rest' ),
-                // TODO ergänzt
                 'get_fields'   => rest_url( 'wp-easy-setup/v1/fields' ),
                 'validation_url'   => rest_url( 'wp-easy-setup/v1/validate-field' ),
                 'process_url'      => rest_url( 'wp-easy-setup/v1/process' ),
@@ -201,6 +206,12 @@ class Setup {
      * @return string
      */
     private function get_vendor_path(): string {
+        // return configured vendor path.
+        if( ! empty( $this->vendor_path ) ) {
+            return $this->vendor_path;
+        }
+
+        // detect vendor path.
         $path = str_replace('/threadi/wp-easy-setup/lib', '', __DIR__ );
         return basename( $path );
     }
@@ -211,7 +222,6 @@ class Setup {
      * @return void
      */
     public function add_rest_api(): void {
-        // TODO ergänzt
         register_rest_route(
             'wp-easy-setup/v1',
             '/fields/(?P<config_name>[a-zA-Z0-9-]+)',
@@ -574,5 +584,16 @@ class Setup {
 
         // return the configuration.
         return $this->get_setup_steps( $config_name );
+    }
+
+    /**
+     * Set vendor path.
+     *
+     * @param string $vendor_path
+     *
+     * @return void
+     */
+    public function set_vendor_path( string $vendor_path ): void {
+        $this->vendor_path = $vendor_path;
     }
 }
