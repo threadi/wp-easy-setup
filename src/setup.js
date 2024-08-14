@@ -1,5 +1,3 @@
-// noinspection NpmUsedModulesInstalled,JSUnresolvedReference
-
 /**
  * File to handle the js-driven setup for this plugin.
  *
@@ -28,6 +26,7 @@ import {
   PanelBody,
 } from '@wordpress/components';
 import React from 'react'
+import { render } from 'react-dom';
 
 /**
  * Object which handles the setup.
@@ -189,9 +188,14 @@ class WpEasySetup extends Component {
 document.addEventListener( 'DOMContentLoaded', () => {
   let html_obj = document.getElementById('wp-easy-setup');
   if( html_obj ) {
-    ReactDOM.createRoot(html_obj).render(
-        <WpEasySetup fields={JSON.parse(html_obj.dataset.fields)} config={JSON.parse(html_obj.dataset.config)} />
-    );
+    if( ReactDOM.createRoot === undefined ) {
+      render(<WpEasySetup fields={JSON.parse( html_obj.dataset.fields )} config={JSON.parse( html_obj.dataset.config )}/>, html_obj);
+    }
+    else {
+      ReactDOM.createRoot( html_obj ).render(
+          <WpEasySetup fields={JSON.parse( html_obj.dataset.fields )} config={JSON.parse( html_obj.dataset.config )}/>
+      );
+    }
   }
 });
 
