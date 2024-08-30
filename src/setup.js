@@ -151,6 +151,13 @@ class WpEasySetup extends Component {
                 {Object.keys(this.state.fields[this.state.step]).map( field_name => (
                     <div key={ field_name }>{this.renderControlSetting( field_name, this.state.fields[this.state.step][field_name] )}</div>
                 ) )}
+                {this.state.step === 1 && this.props.config.skip_url && <Button
+                    isSecondary
+                    onClick={() => location.href=this.props.config.skip_url }
+                >
+                  { <span dangerouslySetInnerHTML={{__html: this.props.config.skip_button_label}}/> }
+                </Button>
+                }
                 {this.state.step > 1 && this.state.step !== Object.keys(this.state.fields).length && <Button
                     isSecondary
                     onClick={() => this.setState( { 'step': this.state.step - 1 } )}
@@ -188,6 +195,9 @@ class WpEasySetup extends Component {
 document.addEventListener( 'DOMContentLoaded', () => {
   let html_obj = document.getElementById('wp-easy-setup');
   if( html_obj ) {
+    if( ! html_obj.dataset.fields || ! html_obj.dataset.config ) {
+      return;
+    }
     if( ReactDOM.createRoot === undefined ) {
       render(<WpEasySetup fields={JSON.parse( html_obj.dataset.fields )} config={JSON.parse( html_obj.dataset.config )}/>, html_obj);
     }

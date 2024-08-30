@@ -60,6 +60,13 @@ class Setup {
     private string $vendor_path = '';
 
     /**
+     * The error help.
+     *
+     * @var string
+     */
+    private string $error_help = '';
+
+    /**
      * Constructor for Init-Handler.
      */
     private function __construct() {
@@ -68,6 +75,9 @@ class Setup {
 
         // register REST API.
         add_action( 'rest_api_init', array( $this, 'add_rest_api' ) );
+
+        // add action to skip setup.
+        add_action( 'admin_action_wp_easy_setup_skip', array( $this, 'skip_setup' ) );
     }
 
     /**
@@ -114,6 +124,7 @@ class Setup {
      * - back_button_label => language-specific title for the back-button
      * - continue_button_label => language-specific title for the continue-button
      * - finish_button_label => language-specific title for the finish-button
+     * - skip_button_label => language-specific title for the skip-button
      *
      * @param array $config The config for the setup.
      *
@@ -271,7 +282,7 @@ class Setup {
             '/completed/',
             array(
                 'methods'             => WP_REST_Server::CREATABLE,
-                'callback'            => array( $this, 'set_completed' ),
+                'callback'            => array( $this, 'set_completed_by_request' ),
                 'permission_callback' => function () {
                     return current_user_can( 'manage_options' );
                 },
@@ -429,9 +440,25 @@ class Setup {
      *
      * @return void
      */
-    public function set_completed( WP_REST_Request $request ): void {
+    public function set_completed_by_request( WP_REST_Request $request ): void {
+        // get config name.
         $config_name = $request->get_param( 'config_name' );
 
+        // set completed.
+        $this->set_completed( $config_name );
+
+        // return empty json.
+        wp_send_json( array() );
+    }
+
+    /**
+     * Set setup to complete.
+     *
+     * @param string $config_name The config name.
+     *
+     * @return void
+     */
+    public function set_completed( string $config_name ): void {
         // get actual list of completed setups.
         $actual_completed = get_option( 'wp_easy_setup_completed', array() );
 
@@ -448,9 +475,6 @@ class Setup {
          * @param string $config_name The name of the requested setup-configuration.
          */
         do_action( 'wp_easy_setup_set_completed', $config_name );
-
-        // return empty json.
-        wp_send_json( array() );
     }
 
     /**
@@ -461,7 +485,7 @@ class Setup {
      * @return string
      */
     public function display( string $name ): string {
-        return '<div id="wp-easy-setup" data-config="' . esc_attr( wp_json_encode( $this->get_config( $name ) ) ) . '" data-fields="' . esc_attr( wp_json_encode( $this->get_setup_steps( $name ) ) ) . '"></div>';
+        return '<div id="wp-easy-setup" data-config="' . esc_attr( wp_json_encode( $this->get_config( $name ) ) ) . '" data-fields="' . esc_attr( wp_json_encode( $this->get_setup_steps( $name ) ) ) . '">' . $this->get_error_help() . '</div>';
     }
 
     /**
@@ -595,5 +619,70 @@ class Setup {
      */
     public function set_vendor_path( string $vendor_path ): void {
         $this->vendor_path = $vendor_path;
+    }
+
+    /**
+     * Return help in case for error on loading of setup.
+     *
+     * @return string
+     */
+    private function get_error_help(): string {
+        return $this->error_help;
+    }
+
+    /**
+     * Set the error help.
+     *
+     * @param string $error_help The text for the error help.
+     *
+     * @return void
+     */
+    public function set_error_help( string $error_help ): void {
+        $this->error_help = $error_help;
+    }
+
+    /**
+     * Return skip link.
+     *
+     * @param string $config_name The config name.
+     * @param string $url The URL to forward.
+     *
+     * @return string
+     */
+    public function get_skip_url( string $config_name, string $url ): string {
+        return add_query_arg(
+            array(
+                'action' => 'wp_easy_setup_skip',
+                'nonce' => wp_create_nonce( 'wp-easy-setup-skip' ),
+                'config_name' => $config_name,
+                'url' => urlencode( $url )
+            ),
+            get_admin_url() . 'admin.php'
+        );
+    }
+
+    /**
+     * Skip setup:
+     * - set it to complete.
+     * - forward user to given URL.
+     *
+     * @return void
+     * @noinspection PhpNoReturnAttributeCanBeAddedInspection
+     */
+    public function skip_setup(): void {
+        check_admin_referer( 'wp-easy-setup-skip', 'nonce' );
+
+        // get config name from request.
+        $config_name = filter_input( INPUT_GET, 'config_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+
+        // get forward URL.
+        $forward_url = filter_input( INPUT_GET, 'url', FILTER_SANITIZE_URL );
+
+        // set setup to complete.
+        $this->set_completed( $config_name );
+
+        // forward user to given url.
+        wp_safe_redirect( $forward_url );
+        exit;
     }
 }
