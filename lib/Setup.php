@@ -176,6 +176,12 @@ class Setup {
 
         // embed the setup-JS-script.
         $script_asset_path = $path . 'build/setup.asset.php';
+
+        // bail if path does not exist.
+        if( ! file_exists( $script_asset_path ) ) {
+            return;
+        }
+
         $script_asset      = require $script_asset_path;
         wp_enqueue_script(
             'wp-easy-setup',
