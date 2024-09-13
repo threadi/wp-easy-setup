@@ -519,7 +519,7 @@ class Setup {
      */
     public function activation(): void {
         foreach( $this->get_options() as $option_name => $value ) {
-            add_option( $option_name, $value, null, true );
+            add_option( $option_name, $value, '', true );
         }
     }
 

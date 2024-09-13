@@ -1,6 +1,6 @@
 {
 	"name": "@wp-easy-setup/wp-easy-setup",
-	"version": "1.2.1",
+	"version": "1.2.2",
 	"description": "Provides a simple react-driven plugin-setup for WordPress-backend.",
 	"author": "Thomas Zwirner",
 	"license": "GPL-2.0-or-later",
